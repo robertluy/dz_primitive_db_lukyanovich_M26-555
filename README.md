@@ -107,5 +107,11 @@ drop_table users
 exit
 ```
 
+### Демонастрация CRUD
+
+[![asciicast](https://asciinema.org/a/VCHszzaTjhVpoNxq.svg)](https://asciinema.org/a/VCHszzaTjhVpoNxq)
+
+(ссылка работает, если не оторбажается - дождитесь полной загрузки этой страницы)
+
 Результаты выборки отображаются в консоли с помощью PrettyTable.
 
