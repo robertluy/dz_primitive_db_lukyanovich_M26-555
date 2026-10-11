@@ -67,3 +67,7 @@ VALUE_TYPE_MESSAGE = (
 RECORD_INSERTED_MESSAGE = (
     'Запись с ID={record_id} успешно добавлена в таблицу "{table_name}".'
 )
+
+EMPTY_SET_MESSAGE = "Необходимо указать значения для обновления."
+EMPTY_WHERE_MESSAGE = "Необходимо указать условие отбора записей."
+ID_UPDATE_MESSAGE = "Столбец ID генерируется автоматически и не изменяется."

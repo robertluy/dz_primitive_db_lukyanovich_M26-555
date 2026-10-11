@@ -2,10 +2,13 @@ from primitive_db.constants import (
     COLUMN_LIST_SEPARATOR,
     COLUMN_SEPARATOR,
     EMPTY_COLUMNS_MESSAGE,
+    EMPTY_SET_MESSAGE,
     EMPTY_TABLES_MESSAGE,
+    EMPTY_WHERE_MESSAGE,
     ID_COLUMN_NAME,
     ID_COLUMN_TYPE,
     ID_STEP,
+    ID_UPDATE_MESSAGE,
     INITIAL_ID,
     INVALID_VALUE_MESSAGE,
     PYTHON_TYPES,
@@ -160,3 +163,76 @@ def insert(metadata, table_name, values):
         )
     )
     return table_data
+
+
+def validate_clauses(table_data, clauses, schema=None):
+    """Проверяет столбцы и типы значений в условиях."""
+    if schema is None:
+        if not table_data:
+            return
+
+        schema = {
+            column_name: type(value).__name__
+            for column_name, value in table_data[0].items()
+        }
+
+    for clause in clauses:
+        if clause is not None:
+            validate_values(schema, clause)
+
+
+def matches_where(record, where_clause):
+    """Проверяет совпадение записи со всеми условиями."""
+    if where_clause is None:
+        return True
+
+    return all(
+        type(record[column_name]) is type(value)
+        and record[column_name] == value
+        for column_name, value in where_clause.items()
+    )
+
+
+def select(table_data, where_clause=None, schema=None):
+    """Возвращает копии всех записей или записей по условию."""
+    validate_clauses(table_data, [where_clause], schema)
+
+    return [
+        record.copy()
+        for record in table_data
+        if matches_where(record, where_clause)
+    ]
+
+
+def update(table_data, set_clause, where_clause, schema=None):
+    """Обновляет подходящие записи после проверки всех условий."""
+    if not set_clause:
+        raise ValueError(EMPTY_SET_MESSAGE)
+
+    if not where_clause:
+        raise ValueError(EMPTY_WHERE_MESSAGE)
+
+    if ID_COLUMN_NAME in set_clause:
+        raise ValueError(ID_UPDATE_MESSAGE)
+
+    validate_clauses(table_data, [set_clause, where_clause], schema)
+
+    for record in table_data:
+        if matches_where(record, where_clause):
+            record.update(set_clause)
+
+    return table_data
+
+
+def delete(table_data, where_clause, schema=None):
+    """Возвращает данные без записей, соответствующих условию."""
+    if not where_clause:
+        raise ValueError(EMPTY_WHERE_MESSAGE)
+
+    validate_clauses(table_data, [where_clause], schema)
+
+    return [
+        record
+        for record in table_data
+        if not matches_where(record, where_clause)
+    ]
