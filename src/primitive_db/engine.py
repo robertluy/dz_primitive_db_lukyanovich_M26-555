@@ -2,6 +2,7 @@ import prompt
 from prettytable import PrettyTable
 
 from primitive_db import constants, core, utils
+from primitive_db.decorators import handle_db_errors
 from primitive_db.parser import parse_data_command, tokenize
 
 
@@ -147,22 +148,20 @@ def execute_command(metadata, user_input):
     return True
 
 
+@handle_db_errors
+def process_input(user_input):
+    metadata = utils.load_metadata(constants.META_FILE)
+    return execute_command(metadata, user_input)
+
+
 def run():
-    """Запускает цикл ввода команд базы данных."""
     print_help()
 
     while True:
         try:
             user_input = prompt.string(constants.COMMAND_PROMPT).strip()
-            metadata = utils.load_metadata(constants.META_FILE)
-            if not execute_command(metadata, user_input):
+            if process_input(user_input) is False:
                 break
         except (EOFError, KeyboardInterrupt):
             print()
             break
-        except KeyError as error:
-            print(constants.KEY_ERROR_MESSAGE.format(name=error))
-        except ValueError as error:
-            print(error)
-        except OSError as error:
-            print(constants.FILE_ERROR_MESSAGE.format(error=error))
