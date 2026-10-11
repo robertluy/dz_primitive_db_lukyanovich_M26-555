@@ -113,3 +113,79 @@ def parse_where(text):
 
 def parse_set(text):
     return parse_assignments(text)
+
+def parse_optional_where(tokens):
+    """Разбирает необязательную часть where."""
+    if not tokens:
+        return None
+
+    if tokens[0] != "where":
+        raise ValueError(
+            INVALID_VALUE_MESSAGE.format(value=" ".join(tokens))
+        )
+
+    return parse_where(" ".join(tokens[1:]))
+
+
+def parse_data_command(command, arguments):
+    """Разбирает аргументы CRUD-команды и возвращает её параметры."""
+    message = INVALID_VALUE_MESSAGE.format(
+        value=" ".join([command, *arguments])
+    )
+
+    if command == "insert":
+        if (
+            len(arguments) < 4
+            or arguments[0] != "into"
+            or arguments[2] != "values"
+        ):
+            raise ValueError(message)
+
+        return {
+            "table_name": arguments[1],
+            "values": parse_values(" ".join(arguments[3:])),
+        }
+
+    if command in ("select", "delete"):
+        if len(arguments) < 2 or arguments[0] != "from":
+            raise ValueError(message)
+
+        where_clause = parse_optional_where(arguments[2:])
+        if command == "delete" and where_clause is None:
+            raise ValueError(message)
+
+        return {
+            "table_name": arguments[1],
+            "where_clause": where_clause,
+        }
+
+    if command == "update":
+        if len(arguments) < 9 or arguments[1] != "set":
+            raise ValueError(message)
+
+        where_index = next(
+            (
+                index
+                for index in range(2, len(arguments))
+                if arguments[index] == "where"
+                and arguments[index - 1] not in ("set", ",", "=")
+            ),
+            None,
+        )
+        if where_index is None:
+            raise ValueError(message)
+
+        return {
+            "table_name": arguments[0],
+            "set_clause": parse_set(
+                " ".join(arguments[2:where_index])
+            ),
+            "where_clause": parse_where(
+                " ".join(arguments[where_index + 1:])
+            ),
+        }
+
+    if command == "info" and len(arguments) == 1:
+        return {"table_name": arguments[0]}
+
+    raise ValueError(message)
