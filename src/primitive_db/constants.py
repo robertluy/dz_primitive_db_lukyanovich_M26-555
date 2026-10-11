@@ -71,3 +71,8 @@ RECORD_INSERTED_MESSAGE = (
 EMPTY_SET_MESSAGE = "Необходимо указать значения для обновления."
 EMPTY_WHERE_MESSAGE = "Необходимо указать условие отбора записей."
 ID_UPDATE_MESSAGE = "Столбец ID генерируется автоматически и не изменяется."
+
+VALUE_PUNCTUATION = "(),="
+VALUE_QUOTES = ('"', "'")
+BOOLEAN_VALUES = {"true": True, "false": False}
+ASSIGNMENT_TOKEN_COUNT = 3
