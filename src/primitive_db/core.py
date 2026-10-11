@@ -5,13 +5,24 @@ from primitive_db.constants import (
     EMPTY_TABLES_MESSAGE,
     ID_COLUMN_NAME,
     ID_COLUMN_TYPE,
+    ID_STEP,
+    INITIAL_ID,
     INVALID_VALUE_MESSAGE,
+    PYTHON_TYPES,
+    RECORD_INSERTED_MESSAGE,
     TABLE_CREATED_MESSAGE,
     TABLE_DROPPED_MESSAGE,
     TABLE_EXISTS_MESSAGE,
     TABLE_LIST_ITEM,
     TABLE_NOT_FOUND_MESSAGE,
     VALID_TYPES,
+    VALUE_TYPE_MESSAGE,
+    VALUES_COUNT_MESSAGE,
+)
+from primitive_db.utils import (
+    delete_table_data,
+    load_table_data,
+    save_table_data,
 )
 
 
@@ -65,6 +76,7 @@ def create_table(metadata, table_name, columns):
     if schema is None:
         return None
 
+    save_table_data(table_name, [])
     metadata[table_name] = schema
     print(
         TABLE_CREATED_MESSAGE.format(
@@ -80,6 +92,7 @@ def drop_table(metadata, table_name):
         print(TABLE_NOT_FOUND_MESSAGE.format(table_name=table_name))
         return None
 
+    delete_table_data(table_name)
     del metadata[table_name]
     print(TABLE_DROPPED_MESSAGE.format(table_name=table_name))
     return metadata
@@ -92,3 +105,58 @@ def list_tables(metadata):
 
     for table_name in metadata:
         print(TABLE_LIST_ITEM.format(table_name=table_name))
+
+
+def validate_values(schema, values):
+    """Проверяет существование столбцов и точное совпадение типов."""
+    for column_name, value in values.items():
+        data_type = schema[column_name]
+        expected_type = PYTHON_TYPES[data_type]
+
+        if type(value) is not expected_type:
+            raise ValueError(
+                VALUE_TYPE_MESSAGE.format(
+                    column_name=column_name,
+                    data_type=data_type,
+                    value=value,
+                )
+            )
+
+
+def insert(metadata, table_name, values):
+    """Проверяет значения и добавляет запись с автоматическим ID."""
+    schema = metadata[table_name]
+    column_names = [
+        column_name
+        for column_name in schema
+        if column_name != ID_COLUMN_NAME
+    ]
+
+    if len(values) != len(column_names):
+        raise ValueError(
+            VALUES_COUNT_MESSAGE.format(
+                expected=len(column_names),
+                actual=len(values),
+            )
+        )
+
+    record_values = dict(zip(column_names, values))
+    validate_values(schema, record_values)
+
+    table_data = load_table_data(table_name)
+    record_id = max(
+        (record[ID_COLUMN_NAME] for record in table_data),
+        default=INITIAL_ID,
+    ) + ID_STEP
+
+    record = {ID_COLUMN_NAME: record_id}
+    record.update(record_values)
+    table_data.append(record)
+
+    print(
+        RECORD_INSERTED_MESSAGE.format(
+            record_id=record_id,
+            table_name=table_name,
+        )
+    )
+    return table_data

@@ -46,3 +46,24 @@ DROP_TABLE_ARGUMENTS = 1
 DATA_DIR = "data"
 TABLE_FILE_EXTENSION = ".json"
 FILE_WRITE_MODE = "w"
+
+PYTHON_TYPES = {
+    "int": int,
+    "str": str,
+    "bool": bool,
+}
+
+INITIAL_ID = 0
+ID_STEP = 1
+
+VALUES_COUNT_MESSAGE = (
+    "Ожидалось значений: {expected}, получено: {actual}. "
+    "Значение ID задавать не нужно."
+)
+VALUE_TYPE_MESSAGE = (
+    'Столбец "{column_name}" должен иметь тип {data_type}. '
+    "Получено: {value!r}."
+)
+RECORD_INSERTED_MESSAGE = (
+    'Запись с ID={record_id} успешно добавлена в таблицу "{table_name}".'
+)
