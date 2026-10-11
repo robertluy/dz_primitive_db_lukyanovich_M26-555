@@ -1,6 +1,8 @@
 from primitive_db.constants import (
     COLUMN_LIST_SEPARATOR,
     COLUMN_SEPARATOR,
+    DELETE_RECORDS_ACTION,
+    DROP_TABLE_ACTION,
     EMPTY_COLUMNS_MESSAGE,
     EMPTY_SET_MESSAGE,
     EMPTY_TABLES_MESSAGE,
@@ -22,6 +24,11 @@ from primitive_db.constants import (
     VALUE_TYPE_MESSAGE,
     VALUES_COUNT_MESSAGE,
 )
+from primitive_db.decorators import (
+    confirm_action,
+    handle_db_errors,
+    log_time,
+)
 from primitive_db.utils import (
     delete_table_data,
     load_table_data,
@@ -31,8 +38,7 @@ from primitive_db.utils import (
 
 def build_schema(columns):
     if not columns:
-        print(EMPTY_COLUMNS_MESSAGE)
-        return None
+        raise ValueError(EMPTY_COLUMNS_MESSAGE)
 
     schema = {ID_COLUMN_NAME: ID_COLUMN_TYPE}
     provided_names = set()
@@ -50,8 +56,7 @@ def build_schema(columns):
                 and data_type != ID_COLUMN_TYPE
             )
         ):
-            print(INVALID_VALUE_MESSAGE.format(value=column))
-            return None
+            raise ValueError(INVALID_VALUE_MESSAGE.format(value=column))
 
         provided_names.add(column_name)
         schema[column_name] = data_type
@@ -66,18 +71,15 @@ def format_schema(schema):
     )
 
 
+@handle_db_errors
 def create_table(metadata, table_name, columns):
     if not table_name.isidentifier():
-        print(INVALID_VALUE_MESSAGE.format(value=table_name))
-        return None
+        raise ValueError(INVALID_VALUE_MESSAGE.format(value=table_name))
 
     if table_name in metadata:
-        print(TABLE_EXISTS_MESSAGE.format(table_name=table_name))
-        return None
+        raise ValueError(TABLE_EXISTS_MESSAGE.format(table_name=table_name))
 
     schema = build_schema(columns)
-    if schema is None:
-        return None
 
     save_table_data(table_name, [])
     metadata[table_name] = schema
@@ -90,10 +92,11 @@ def create_table(metadata, table_name, columns):
     return metadata
 
 
+@handle_db_errors
+@confirm_action(DROP_TABLE_ACTION)
 def drop_table(metadata, table_name):
     if table_name not in metadata:
-        print(TABLE_NOT_FOUND_MESSAGE.format(table_name=table_name))
-        return None
+        raise ValueError(TABLE_NOT_FOUND_MESSAGE.format(table_name=table_name))
 
     delete_table_data(table_name)
     del metadata[table_name]
@@ -101,6 +104,7 @@ def drop_table(metadata, table_name):
     return metadata
 
 
+@handle_db_errors
 def list_tables(metadata):
     if not metadata:
         print(EMPTY_TABLES_MESSAGE)
@@ -126,6 +130,8 @@ def validate_values(schema, values):
             )
 
 
+@handle_db_errors
+@log_time
 def insert(metadata, table_name, values):
     """Проверяет значения и добавляет запись с автоматическим ID."""
     schema = metadata[table_name]
@@ -193,6 +199,8 @@ def matches_where(record, where_clause):
     )
 
 
+@handle_db_errors
+@log_time
 def select(table_data, where_clause=None, schema=None):
     """Возвращает копии всех записей или записей по условию."""
     validate_clauses(table_data, [where_clause], schema)
@@ -204,6 +212,7 @@ def select(table_data, where_clause=None, schema=None):
     ]
 
 
+@handle_db_errors
 def update(table_data, set_clause, where_clause, schema=None):
     """Обновляет подходящие записи после проверки всех условий."""
     if not set_clause:
@@ -224,6 +233,8 @@ def update(table_data, set_clause, where_clause, schema=None):
     return table_data
 
 
+@handle_db_errors
+@confirm_action(DELETE_RECORDS_ACTION)
 def delete(table_data, where_clause, schema=None):
     """Возвращает данные без записей, соответствующих условию."""
     if not where_clause:

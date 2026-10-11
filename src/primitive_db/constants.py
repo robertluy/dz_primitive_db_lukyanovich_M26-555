@@ -117,3 +117,22 @@ TABLE_INFO_MESSAGE = (
 )
 KEY_ERROR_MESSAGE = "Ошибка: Таблица или столбец {name} не найден."
 FILE_ERROR_MESSAGE = "Ошибка работы с файлами: {error}"
+
+FILE_NOT_FOUND_MESSAGE = (
+    "Ошибка: Файл данных не найден. "
+    "Возможно, база данных не инициализирована."
+)
+UNEXPECTED_ERROR_MESSAGE = "Произошла непредвиденная ошибка: {error}"
+
+CONFIRM_PROMPT = (
+    'Вы уверены, что хотите выполнить "{action_name}"? [y/n]: '
+)
+CONFIRM_YES = "y"
+ACTION_CANCELLED_MESSAGE = "Операция отменена."
+
+DROP_TABLE_ACTION = "удаление таблицы"
+DELETE_RECORDS_ACTION = "удаление записей"
+
+TIME_MESSAGE = (
+    "Функция {function_name} выполнилась за {elapsed:.3f} секунд"
+)
