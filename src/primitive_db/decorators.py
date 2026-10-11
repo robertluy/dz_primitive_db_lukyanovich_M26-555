@@ -72,3 +72,15 @@ def log_time(function):
             )
 
     return preserve_metadata(wrapper, function)
+
+
+def create_cacher():
+    cache = {}
+
+    def cache_result(key, value_func):
+        if key not in cache:
+            cache[key] = value_func()
+        return cache[key]
+
+    cache_result.clear = cache.clear
+    return cache_result

@@ -1,3 +1,5 @@
+import json
+
 from primitive_db.constants import (
     COLUMN_LIST_SEPARATOR,
     COLUMN_SEPARATOR,
@@ -26,6 +28,7 @@ from primitive_db.constants import (
 )
 from primitive_db.decorators import (
     confirm_action,
+    create_cacher,
     handle_db_errors,
     log_time,
 )
@@ -35,7 +38,7 @@ from primitive_db.utils import (
     save_table_data,
 )
 
-
+cache_select = create_cacher()
 def build_schema(columns):
     if not columns:
         raise ValueError(EMPTY_COLUMNS_MESSAGE)
@@ -83,6 +86,7 @@ def create_table(metadata, table_name, columns):
 
     save_table_data(table_name, [])
     metadata[table_name] = schema
+    cache_select.clear()
     print(
         TABLE_CREATED_MESSAGE.format(
             table_name=table_name,
@@ -100,6 +104,7 @@ def drop_table(metadata, table_name):
 
     delete_table_data(table_name)
     del metadata[table_name]
+    cache_select.clear()
     print(TABLE_DROPPED_MESSAGE.format(table_name=table_name))
     return metadata
 
@@ -161,6 +166,7 @@ def insert(metadata, table_name, values):
     record = {ID_COLUMN_NAME: record_id}
     record.update(record_values)
     table_data.append(record)
+    cache_select.clear()
 
     print(
         RECORD_INSERTED_MESSAGE.format(
@@ -202,14 +208,24 @@ def matches_where(record, where_clause):
 @handle_db_errors
 @log_time
 def select(table_data, where_clause=None, schema=None):
-    """Возвращает копии всех записей или записей по условию."""
     validate_clauses(table_data, [where_clause], schema)
 
-    return [
-        record.copy()
-        for record in table_data
-        if matches_where(record, where_clause)
-    ]
+    cache_key = json.dumps(
+        [table_data, where_clause, schema],
+        sort_keys=True,
+        ensure_ascii=False,
+    )
+
+    cached_records = cache_select(
+        cache_key,
+        lambda: [
+            record.copy()
+            for record in table_data
+            if matches_where(record, where_clause)
+        ],
+    )
+
+    return [record.copy() for record in cached_records]
 
 
 @handle_db_errors
@@ -229,21 +245,26 @@ def update(table_data, set_clause, where_clause, schema=None):
     for record in table_data:
         if matches_where(record, where_clause):
             record.update(set_clause)
-
+    for record in table_data:
+        if matches_where(record, where_clause):
+            record.update(set_clause)
+    cache_select.clear()
     return table_data
 
 
 @handle_db_errors
 @confirm_action(DELETE_RECORDS_ACTION)
 def delete(table_data, where_clause, schema=None):
-    """Возвращает данные без записей, соответствующих условию."""
+    """Удаляет подходящие записи и сбрасывает кэш выборок."""
     if not where_clause:
         raise ValueError(EMPTY_WHERE_MESSAGE)
 
     validate_clauses(table_data, [where_clause], schema)
 
-    return [
-        record
-        for record in table_data
+    remaining_records = [
+        record for record in table_data
         if not matches_where(record, where_clause)
     ]
+
+    cache_select.clear()
+    return remaining_records
