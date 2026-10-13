@@ -39,7 +39,10 @@ from primitive_db.utils import (
 )
 
 cache_select = create_cacher()
+
+
 def build_schema(columns):
+    """ Проверят столбцы и создает схему с автоматическим ID"""
     if not columns:
         raise ValueError(EMPTY_COLUMNS_MESSAGE)
 
@@ -68,6 +71,7 @@ def build_schema(columns):
 
 
 def format_schema(schema):
+    """Преобразвет схему таблицы в строку со столбцами и типами"""
     return COLUMN_LIST_SEPARATOR.join(
         f"{column_name}{COLUMN_SEPARATOR}{data_type}"
         for column_name, data_type in schema.items()
@@ -76,6 +80,7 @@ def format_schema(schema):
 
 @handle_db_errors
 def create_table(metadata, table_name, columns):
+    """Создает файл таблицы и добавляет ее схему в метаданные"""
     if not table_name.isidentifier():
         raise ValueError(INVALID_VALUE_MESSAGE.format(value=table_name))
 
@@ -99,6 +104,7 @@ def create_table(metadata, table_name, columns):
 @handle_db_errors
 @confirm_action(DROP_TABLE_ACTION)
 def drop_table(metadata, table_name):
+    """Удаляет файл таблицы и ее схему из метаданных"""
     if table_name not in metadata:
         raise ValueError(TABLE_NOT_FOUND_MESSAGE.format(table_name=table_name))
 
@@ -111,6 +117,7 @@ def drop_table(metadata, table_name):
 
 @handle_db_errors
 def list_tables(metadata):
+    """Выводит список таблиц или сообщение об их отсутствии"""
     if not metadata:
         print(EMPTY_TABLES_MESSAGE)
         return
@@ -208,6 +215,7 @@ def matches_where(record, where_clause):
 @handle_db_errors
 @log_time
 def select(table_data, where_clause=None, schema=None):
+    """Возвращает подходящие записи с попощью кэша выборок"""
     validate_clauses(table_data, [where_clause], schema)
 
     cache_key = json.dumps(
@@ -242,9 +250,6 @@ def update(table_data, set_clause, where_clause, schema=None):
 
     validate_clauses(table_data, [set_clause, where_clause], schema)
 
-    for record in table_data:
-        if matches_where(record, where_clause):
-            record.update(set_clause)
     for record in table_data:
         if matches_where(record, where_clause):
             record.update(set_clause)

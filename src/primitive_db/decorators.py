@@ -75,9 +75,11 @@ def log_time(function):
 
 
 def create_cacher():
+    """Создает функцию с собственным кэшем в замыкании"""
     cache = {}
 
     def cache_result(key, value_func):
+        """Загружает метаданные и выполняет введеную команду"""
         if key not in cache:
             cache[key] = value_func()
         return cache[key]

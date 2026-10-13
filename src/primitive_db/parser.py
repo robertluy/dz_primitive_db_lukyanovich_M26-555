@@ -10,6 +10,7 @@ from primitive_db.constants import (
 
 
 def tokenize(text):
+    """Разбивает команду на токены с сохранением кавычек значений"""
     lexer = shlex.shlex(
         text,
         posix=False,
@@ -28,6 +29,7 @@ def tokenize(text):
 
 
 def parse_value(token):
+    """Преобразует токен в строку, целое число или логическое значение"""
     if token.startswith(VALUE_QUOTES):
         values = shlex.split(token)
         if len(values) != 1:
@@ -46,6 +48,7 @@ def parse_value(token):
 
 
 def split_items(tokens):
+    """Разделяет токены по запятым и отклоняет пустые элементы"""
     items = []
     current_item = []
 
@@ -68,6 +71,7 @@ def split_items(tokens):
 
 
 def parse_values(text):
+    """Разбирает список значений в скобках для команды insert"""
     tokens = tokenize(text)
 
     if tokens[:1] != ["("] or tokens[-1:] != [")"]:
@@ -87,6 +91,7 @@ def parse_values(text):
 
 
 def parse_assignments(text):
+    """Преобразует присваивания через запятую в словарь значений"""
     assignments = {}
 
     for item in split_items(tokenize(text)):
@@ -105,6 +110,7 @@ def parse_assignments(text):
 
 
 def parse_where(text):
+    """Разбирает одно условие равенства для отбора записей"""
     condition = parse_assignments(text)
     if len(condition) != 1:
         raise ValueError(INVALID_VALUE_MESSAGE.format(value=text))
@@ -112,6 +118,7 @@ def parse_where(text):
 
 
 def parse_set(text):
+    """Разбирает присваивания значений для обновления записей"""
     return parse_assignments(text)
 
 def parse_optional_where(tokens):
