@@ -150,11 +150,13 @@ def execute_command(metadata, user_input):
 
 @handle_db_errors
 def process_input(user_input):
+    """Загружает метаданные и выполнет введенную команду"""
     metadata = utils.load_metadata(constants.META_FILE)
     return execute_command(metadata, user_input)
 
 
 def run():
+    """Запускает цикл ввода команд до выхода или прерывания"""
     print_help()
 
     while True:

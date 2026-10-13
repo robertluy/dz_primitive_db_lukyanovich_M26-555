@@ -1,31 +1,49 @@
 # Примитивная база данных
 
-Учебный проект консольной базы данных на Python.
-Текущий этап: подготовка пакета и настройка окружения, обработка команд.
+Учебная консольная база данных на Python с хранением таблиц в JSON.
+Поддерживает создание и удаление таблиц, CRUD-операции, проверку типов,
+фильтрацию записей, подтверждение удаления и кэширование выборок.
 
 ## Установка
 
-Требуются uv и Python 3.12 или выше.
+Требуются Python 3.12 или выше, uv, Git и make.
+
+Клонируйте репозиторий и перейдите в папку проекта:
 
 ```bash
-uv sync
+git clone https://github.com/robertluy/dz_primitive_db_lukyanovich_M26-555.git
+cd dz_primitive_db_lukyanovich_M26-555
+```
+
+Установите зависимости:
+
+```bash
+make install
 ```
 
 ## Запуск
 
 ```bash
-uv run database
+make run
 ```
-
 ## Проверка кода
 
 ```bash
-uv run ruff check .
+make lint
 ```
 
 ## Сборка
 
 ```bash
+make build
+```
+
+Команды Makefile также можно выполнить напрямую:
+
+```bash
+uv sync
+uv run database
+uv run ruff check .
 uv build
 ```
 
@@ -133,7 +151,13 @@ exit
 
 [![asciicast](https://asciinema.org/a/upDXRHY1vrWUUqVz.svg)](https://asciinema.org/a/upDXRHY1vrWUUqVz)
 
-выше этой надписи должна быть
+выше этой надписи должна быть ссылка на аскинему
 
 Результаты выборки отображаются в консоли с помощью PrettyTable.
+
+## Финальное демо
+
+[![asciicast](https://asciinema.org/a/XE8W8zaKX6AwJByV.svg)](https://asciinema.org/a/XE8W8zaKX6AwJByV)
+
+выше этой надписи должна быть ссылка на аскинему
 
